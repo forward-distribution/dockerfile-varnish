@@ -525,6 +525,10 @@ sub paywall_subroutine {
         var.set_string("eMeterQuery", var.get_string("eMeterQuery") + {", "PaywallType" : ""} + resp.http.X-Paywall-Type + {"""});
       }
 
+      if (resp.http.X-Paywall-User-Ip != "") {
+        var.set_string("eMeterQuery", var.get_string("eMeterQuery") + {", "UserIp" : ""} + resp.http.X-Paywall-User-Ip + {"""});
+      }
+      
       var.set_string("eMeterQuery", var.get_string("eMeterQuery") + " }");
       curl.set_timeout(2000);
       curl.post("{{ getenv "E_METER_URL" }}", var.get_string("eMeterQuery"));
