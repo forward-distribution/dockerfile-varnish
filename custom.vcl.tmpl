@@ -303,8 +303,8 @@ sub vcl_hash {
   # Cache based on url
   hash_data(req.url);
 
-  # cache based on cookie
-  if (req.http.Cookie) {
+  # homepage cache based on cookie category
+  if (req.url == "/" && req.http.Cookie) {
     cookie.parse(req.http.Cookie);
     cookie.keep("category");
     if(cookie.get_string()) {
