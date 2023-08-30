@@ -270,7 +270,7 @@ sub vcl_recv {
 
   if (req.http.Cookie) {
     cookie.parse(req.http.Cookie);
-    cookie.keep("MPP-SessionId,sso-sessionId,AccessToken,category");
+    cookie.keep_re("^(MPP-SessionId$|sso-sessionId$|AccessToken$|category$|spid\.)");
     set req.http.Cookie = cookie.get_string();
   }
 
