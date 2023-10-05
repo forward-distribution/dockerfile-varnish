@@ -592,9 +592,9 @@ sub paywall_subroutine {
         var.set_string("eMeterQuery", var.get_string("eMeterQuery") + {", "PaywallType" : ""} + resp.http.X-Paywall-Type + {"""});
       }
 
-      if (req.http.CF-Connecting-IP != "") {
+      if (req.http.CF-Connecting-IP) {
         var.set_string("eMeterQuery", var.get_string("eMeterQuery") + {", "EndUserClientRealIp" : ""} + req.http.CF-Connecting-IP + {"""});
-      } else if (req.http.X-Real-IP != "") {
+      } else if (req.http.X-Real-IP) {
         var.set_string("eMeterQuery", var.get_string("eMeterQuery") + {", "EndUserClientRealIp" : ""} + req.http.X-Real-IP + {"""});
       }
 
