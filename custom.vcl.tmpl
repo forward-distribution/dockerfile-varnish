@@ -536,9 +536,9 @@ sub bot_verification {
   if (req.http.User-Agent ~ "(?i)googlebot" && resp.http.X-Paid-Content == "true") {
     curl.set_timeout(1000);
     var.set_string("botVerificationUrl", "{{ getenv "BOT_VERIFICATION" }}" + "?ip=");
-    if (req.http.CF-Connecting-IP != "") {
+    if (req.http.CF-Connecting-IP) {
       var.set_string("botVerificationUrl", var.get_string("botVerificationUrl") + req.http.CF-Connecting-IP);
-    } else if (req.http.X-Real-IP != "") {
+    } else if (req.http.X-Real-IP) {
       var.set_string("botVerificationUrl", var.get_string("botVerificationUrl") + req.http.X-Real-IP);
     }
     curl.get(var.get_string("botVerificationUrl"));
@@ -564,31 +564,31 @@ sub paywall_subroutine {
         + {"", "ProbeVersion" : "1.1.0""}
       );
 
-      if (resp.http.X-Free-Showcase != "") {
+      if (resp.http.X-Free-Showcase) {
         var.set_string("eMeterQuery", var.get_string("eMeterQuery") + {", "FreeShowcase" : ""} + resp.http.X-Free-Showcase + {"""});
       }
 
-      if (req.http.Cookie != "") {
+      if (req.http.Cookie) {
         var.set_string("eMeterQuery", var.get_string("eMeterQuery") + {", "Cookie" : ""} + req.http.Cookie + {"""});
       }
 
-      if (req.http.ContentType != "") {
+      if (req.http.ContentType) {
         var.set_string("eMeterQuery", var.get_string("eMeterQuery") + {", "ContentType" : ""} + req.http.ContentType + {"""});
       }
 
-      if (req.http.Referer != "") {
+      if (req.http.Referer) {
         var.set_string("eMeterQuery", var.get_string("eMeterQuery") + {", "Referer" : ""} + req.http.Referer + {"""});
       }
 
-      if (req.http.User-Agent != "") {
+      if (req.http.User-Agent) {
         var.set_string("eMeterQuery", var.get_string("eMeterQuery") + {", "User-Agent" : ""} + req.http.User-Agent + {"""});
       }
 
-      if (resp.http.X-TENANT != "") {
+      if (resp.http.X-TENANT) {
         var.set_string("eMeterQuery", var.get_string("eMeterQuery") + {", "TENANT" : ""} + resp.http.X-TENANT + {"""});
       }
 
-      if (resp.http.X-Paywall-Type != "") {
+      if (resp.http.X-Paywall-Type) {
         var.set_string("eMeterQuery", var.get_string("eMeterQuery") + {", "PaywallType" : ""} + resp.http.X-Paywall-Type + {"""});
       }
 
@@ -598,7 +598,7 @@ sub paywall_subroutine {
         var.set_string("eMeterQuery", var.get_string("eMeterQuery") + {", "EndUserClientRealIp" : ""} + req.http.X-Real-IP + {"""});
       }
 
-      if (req.http.verified-bot != "") {
+      if (req.http.verified-bot) {
         var.set_string("eMeterQuery", var.get_string("eMeterQuery") + {", "VerifiedBot" : ""} + req.http.verified-bot + {"""});
       }
 
