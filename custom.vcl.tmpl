@@ -568,10 +568,6 @@ sub paywall_subroutine {
         var.set_string("eMeterQuery", var.get_string("eMeterQuery") + {", "FreeShowcase" : ""} + resp.http.X-Free-Showcase + {"""});
       }
 
-      if (req.http.Cookie) {
-        var.set_string("eMeterQuery", var.get_string("eMeterQuery") + {", "Cookie" : ""} + req.http.Cookie + {"""});
-      }
-
       if (req.http.ContentType) {
         var.set_string("eMeterQuery", var.get_string("eMeterQuery") + {", "ContentType" : ""} + req.http.ContentType + {"""});
       }
@@ -600,6 +596,34 @@ sub paywall_subroutine {
 
       if (req.http.verified-bot) {
         var.set_string("eMeterQuery", var.get_string("eMeterQuery") + {", "VerifiedBot" : ""} + req.http.verified-bot + {"""});
+      }
+
+      {{ if (getenv "DRIVE_API_URL") }}
+        if (req.http.Cookie) {
+          std.log("cookie");
+          std.log(regsub(req.http.Cookie, "(.*?)(sso-sessionId=)([^;]*)(.*)", "\3"));
+          std.log(req.http.Cookie);
+          # var.set_string("eMeterQuery", var.get_string("eMeterQuery") + {", "DriveUserId" : ""} + regsub(req.http.Cookie, "(.*?)(sso-sessionId=)([^;]*)(.*)", "\3") + {"""});
+          var.set_string("driveQuery", {"{ "portal" : ""} + "wn.de" + {"""});
+          var.set_string("driveQuery", var.get_string("driveQuery") + {", "user_id" : ""} + "amp-gr6CSihswH4axqzYnx5L1A" + {"""});
+          var.set_string("driveQuery", var.get_string("driveQuery") + " }");
+          curl.set_timeout(1000);
+          curl.header_add("Content-Type: application/json");
+          curl.post("{{ getenv "DRIVE_API_URL" }}", var.get_string("driveQuery"));
+          std.log("curl");
+          std.log(var.get_string("driveQuery"));
+          std.log(var.get_string("eMeterQuery"));
+          std.log(curl.status());
+          std.log(curl.body());
+          if (curl.status() == 200) {
+            var.set_string("eMeterQuery", var.get_string("eMeterQuery") + {", "DriveCorrelationId" : ""} + regsub(curl.body(), "(.*?)(correlation_id\x22:\x22)([^\x22]*)(.*)", "\3") + {"""});
+          }
+          curl.free();
+        }
+      {{ end }}
+
+      if (req.http.Cookie) {
+        var.set_string("eMeterQuery", var.get_string("eMeterQuery") + {", "Cookie" : ""} + req.http.Cookie + {"""});
       }
 
       var.set_string("eMeterQuery", var.get_string("eMeterQuery") + " }");
