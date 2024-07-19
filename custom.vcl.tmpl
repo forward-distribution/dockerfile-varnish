@@ -499,6 +499,9 @@ sub vcl_synth {
         } else {
           set resp.http.Location = "https://" + req.http.Host + req.url + "&" + var.get_string("eMeterLocation");
         }
+        {{ if (getenv "DRIVE_API_URL") }}
+        set resp.http.Location = resp.http.Location + "&ueg=" + var.get_string("DriveEngagementGroup");
+        {{ end }}
         var.clear();
         return (deliver);
       } else {
@@ -609,6 +612,7 @@ sub paywall_subroutine {
       if (curl.status() > 0) {
         var.set_string("eMeterAllowAccess", curl.header("AllowAccess"));
         var.set_string("eMeterLocation", curl.header("Location"));
+        curl.free();
         if (var.get_string("eMeterAllowAccess") == "false" && var.get_string("eMeterLocation") != "") {
           if (var.get_string("eMeterLocation") ~ "pwlayout=") {
             if (resp.http.Set-Cookie) {
@@ -622,11 +626,32 @@ sub paywall_subroutine {
             return (synth(751, "eMeter redirection"));
           }
 
+          {{ if (getenv DRIVE_API_URL) }}
+          if (var.get_string("eMeterLocation") ~ "pid=true" && (req.url !~ "(\?)pid=true" || req.url !~ "(\?|&)ueg=")) {
+            set req.url = regsuball(req.url, "(\?)(.*)", "");
+            var.set_string("eMeterLocation", regsub(var.get_string("eMeterLocation"), "lid=true", ""));
+            {{ if (getenv "DRIVE_API_URL") }}
+            call get_engagement_group;
+            {{ end }}
+            return (synth(751, "eMeter redirection"));
+          }
+
+          # catch inexisting ueg
+          if (var.get_string("eMeterLocation") ~ "pid=true" && req.url !~ "(\?|&)ueg=(champion|high-usage-irregular|low-usage-irregular|loyal|fly-by|default)") {
+            set req.url = regsuball(req.url, "(\?)(.*)", "");
+            var.set_string("eMeterLocation", regsub(var.get_string("eMeterLocation"), "lid=true", ""));
+            {{ if (getenv "DRIVE_API_URL") }}
+            call get_engagement_group;
+            {{ end }}
+            return (synth(751, "eMeter redirection"));
+          }
+          {{ else }}
           if (var.get_string("eMeterLocation") ~ "pid=true" && req.url !~ "(\?)pid=true") {
             set req.url = regsuball(req.url, "(\?)(.*)", "");
             var.set_string("eMeterLocation", regsub(var.get_string("eMeterLocation"), "lid=true", ""));
             return (synth(751, "eMeter redirection"));
           }
+          {{ end }}
 
           if (req.url ~ "(\?|&)lid=true" && req.url ~ "(\?|&)pid=true") {
             set req.url = regsuball(req.url, "(\?)(.*)", "");
@@ -641,4 +666,23 @@ sub paywall_subroutine {
       curl.free();
   }
 }
-  {{ end }}{{ end }}
+{{ if (getenv "DRIVE_API_URL") }}
+sub get_engagement_group {
+  # TODO retrieve user_id from cookie
+
+  curl.set_timeout(1000);
+  curl.header_add("Content-Type: application/json");
+  # post to DRIVE_API_URL with body e.g.: {"portal":"wn.de","user_id":"<user_id>"}
+  curl.post("{{ getenv "DRIVE_API_URL" }}", {"\{"portal":""} + req.http.Host + {"","user_id":""} + "amp-gr6CSihswH4axqzYnx5L1A" + {""\}"});
+
+  if (curl.status() != 200) {
+    var.set_string("DriveEngagementGroup", "default");
+    curl.free();
+    return;
+  }
+
+  var.set_string("DriveEngagementGroup", regsub(curl.body(), {"(.*?)"user_engagement_group":"([^"]*)(.*)"}, "\2"));
+  curl.free();
+}
+{{ end }}
+{{ end }}{{ end }}
