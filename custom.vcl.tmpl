@@ -630,9 +630,7 @@ sub paywall_subroutine {
           if (var.get_string("eMeterLocation") ~ "pid=true" && (req.url !~ "(\?)pid=true" || req.url !~ "(\?|&)ueg=")) {
             set req.url = regsuball(req.url, "(\?)(.*)", "");
             var.set_string("eMeterLocation", regsub(var.get_string("eMeterLocation"), "lid=true", ""));
-            {{ if (getenv "DRIVE_API_URL") }}
             call get_engagement_group;
-            {{ end }}
             return (synth(751, "eMeter redirection"));
           }
 
@@ -640,9 +638,7 @@ sub paywall_subroutine {
           if (var.get_string("eMeterLocation") ~ "pid=true" && req.url !~ "(\?|&)ueg=(champion|high-usage-irregular|low-usage-irregular|loyal|fly-by|default)") {
             set req.url = regsuball(req.url, "(\?)(.*)", "");
             var.set_string("eMeterLocation", regsub(var.get_string("eMeterLocation"), "lid=true", ""));
-            {{ if (getenv "DRIVE_API_URL") }}
             call get_engagement_group;
-            {{ end }}
             return (synth(751, "eMeter redirection"));
           }
           {{ else }}
