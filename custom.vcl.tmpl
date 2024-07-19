@@ -626,12 +626,15 @@ sub paywall_subroutine {
             return (synth(751, "eMeter redirection"));
           }
 
-          {{ if (getenv DRIVE_API_URL) }}
-          if (var.get_string("eMeterLocation") ~ "pid=true" && (req.url !~ "(\?)pid=true" || req.url !~ "(\?|&)ueg=(champion|high-usage-irregular|low-usage-irregular|loyal|fly-by|default)")) {
-            set req.url = regsuball(req.url, "(\?)(.*)", "");
-            var.set_string("eMeterLocation", regsub(var.get_string("eMeterLocation"), "lid=true", ""));
+          {{ if (getenv "DRIVE_API_URL") }}
+          if (var.get_string("eMeterLocation") ~ "pid=true") {
             call get_engagement_group;
-            return (synth(751, "eMeter redirection"));
+            if (req.url !~ "(\?)pid=true" || req.url !~ ("(\?|&)ueg=" + var.get_string("DriveEngagementGroup"))) {
+              set req.url = regsuball(req.url, "(\?)(.*)", "");
+              var.set_string("eMeterLocation", regsub(var.get_string("eMeterLocation"), "lid=true", ""));
+              return (synth(751, "eMeter redirection"));
+            }
+            return; # here is ok, both pid=true and correct ueg are set
           }
           {{ else }}
           if (var.get_string("eMeterLocation") ~ "pid=true" && req.url !~ "(\?)pid=true") {
@@ -670,6 +673,7 @@ sub get_engagement_group {
   }
 
   var.set_string("DriveEngagementGroup", regsub(curl.body(), {"(.*?)"user_engagement_group":"([^"]*)(.*)"}, "\2"));
+  # TODO if DriveEngagementGroup == unknown || empty set it to default
   curl.free();
 }
 {{ end }}
