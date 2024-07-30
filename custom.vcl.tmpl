@@ -673,7 +673,7 @@ sub get_engagement_group {
   # post to DRIVE_API_URL with body e.g.: {"portal":"wn.de","user_id":"<user_id>"}
   curl.post("{{ getenv "DRIVE_API_URL" }}", "{" + {""portal":""} + req.http.Host + {"","user_id":""} + var.get_string("DriveUserId") + {"""} + "}");
 
-  if (curl.status() != 200 || curl.body() ~ {""user_engagement_group":null"}) {
+  if (curl.status() != 200 || curl.body() !~ {""user_engagement_group":""}) {
     var.set_string("DriveEngagementGroup", "default");
     curl.free();
     return;
