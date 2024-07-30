@@ -495,9 +495,9 @@ sub vcl_synth {
       set resp.status = 302;
       if (var.get_string("eMeterLocation") != "") {
         if (req.url !~ "\?") {
-          set resp.http.Location = "http://" + req.http.Host + req.url + "?" + var.get_string("eMeterLocation");
+          set resp.http.Location = "https://" + req.http.Host + req.url + "?" + var.get_string("eMeterLocation");
         } else {
-          set resp.http.Location = "http://" + req.http.Host + req.url + "&" + var.get_string("eMeterLocation");
+          set resp.http.Location = "https://" + req.http.Host + req.url + "&" + var.get_string("eMeterLocation");
         }
         {{ if (getenv "DRIVE_API_URL") }}
         set resp.http.Location = resp.http.Location + "&ueg=" + var.get_string("DriveEngagementGroup");
@@ -505,7 +505,7 @@ sub vcl_synth {
         var.clear();
         return (deliver);
       } else {
-        set resp.http.Location = "http://" + req.http.Host + req.url;
+        set resp.http.Location = "https://" + req.http.Host + req.url;
         var.clear();
         return (deliver);
       }
@@ -664,22 +664,22 @@ sub get_engagement_group {
     var.set_string("DriveUserId", regsub(req.http.Cookie, "(^|;\s*)sso-sessionId=(.*)(;.*|$)", "\2"));
   } else {
     # example: spid.d8a1=6e785887-ce8e-4ac1-969a-785fb4a349cd.1721393063.5.1722338888.1721740542.c5e01ee3-4035-448d-9293-a4a0caa1364a => user_id = "d8a1=6e785887-ce8e-4ac1-969a-785fb4a349cd"
-    var.set_string("DriveUserId", regsub(req.http.Cookie, "(^|;\s*)spid\.(.*)\..*", "\2"));
+    var.set_string("DriveUserId", regsub(req.http.Cookie, "(^|;\s*)spid\.(.*?)\..*", "\2"));
   }
 
   curl.set_timeout(1000);
   curl.header_add("Content-Type: application/json");
 
   # post to DRIVE_API_URL with body e.g.: {"portal":"wn.de","user_id":"<user_id>"}
-  curl.post("{{ getenv "DRIVE_API_URL" }}", {"\{"portal":""} + req.http.Host + {"","user_id":""} + var.get_string("DriveUserId") + {""\}"});
+  curl.post("{{ getenv "DRIVE_API_URL" }}", "{" + {""portal":""} + req.http.Host + {"","user_id":""} + var.get_string("DriveUserId") + {"""} + "}");
 
-  if (curl.status() != 200) {
+  if (curl.status() != 200 || curl.body() ~ {""user_engagement_group":null"}) {
     var.set_string("DriveEngagementGroup", "default");
     curl.free();
     return;
   }
 
-  var.set_string("DriveEngagementGroup", regsub(curl.body(), {"(.*?)"user_engagement_group":"([^"]*)(.*)"}, "\2"));
+  var.set_string("DriveEngagementGroup", regsub(curl.body(), {".*"user_engagement_group":"(.*?)".*"}, "\1"));
   # TODO if DriveEngagementGroup == unknown || empty set it to default
   curl.free();
 }
