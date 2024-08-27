@@ -682,6 +682,7 @@ sub get_engagement_group_and_correlation_id {
 
   if (curl.status() != 200) {
     var.set_string("DriveEngagementGroup", "default");
+    var.set_string("DriveCorrelationId", "");
     curl.free();
     return;
   }
