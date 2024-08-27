@@ -501,6 +501,13 @@ sub vcl_synth {
         }
         {{ if (getenv "DRIVE_API_URL") }}
         set resp.http.Location = resp.http.Location + "&ueg=" + var.get_string("DriveEngagementGroup");
+        if (var.get_string("DriveCorrelationId") != "") {
+          if (resp.http.Set-Cookie) {
+            set resp.http.Set-Cookie = resp.http.Set-Cookie + "DriveCorrelationId=" + var.get_string("DriveCorrelationId") + "; path=/;";
+          } else {
+            set resp.http.Set-Cookie = "DriveCorrelationId=" + var.get_string("DriveCorrelationId") + "; path=/;";
+          }
+        }
         {{ end }}
         var.clear();
         return (deliver);
@@ -628,7 +635,7 @@ sub paywall_subroutine {
 
           {{ if (getenv "DRIVE_API_URL") }}
           if (var.get_string("eMeterLocation") ~ "pid=true") {
-            call get_engagement_group;
+            call get_engagement_group_and_correlation_id;
             if (req.url !~ "(\?)pid=true" || regsub(req.url, "^.*(\?|&)ueg=(.*)(&|$)", "\2") != var.get_string("DriveEngagementGroup")) {
               set req.url = regsuball(req.url, "(\?)(.*)", "");
               var.set_string("eMeterLocation", regsub(var.get_string("eMeterLocation"), "lid=true", ""));
@@ -658,7 +665,7 @@ sub paywall_subroutine {
   }
 }
 {{ if (getenv "DRIVE_API_URL") }}
-sub get_engagement_group {
+sub get_engagement_group_and_correlation_id {
   # retrieve user_id from sso id cookie if exists (user logged in), otherwise from spid
   if (req.http.Cookie ~ "sso-sessionId=") {
     var.set_string("DriveUserId", regsub(req.http.Cookie, "(^|;\s*)sso-sessionId=(.*?)(;.*|$)", "\2"));
@@ -673,14 +680,23 @@ sub get_engagement_group {
   # post to DRIVE_API_URL with body e.g.: {"portal":"wn.de","user_id":"<user_id>"}
   curl.post("{{ getenv "DRIVE_API_URL" }}", "{" + {""portal":""} + req.http.Host + {"","user_id":""} + var.get_string("DriveUserId") + {"""} + "}");
 
-  if (curl.status() != 200 || curl.body() !~ {""user_engagement_group":""}) {
+  if (curl.status() != 200) {
     var.set_string("DriveEngagementGroup", "default");
     curl.free();
     return;
   }
 
-  var.set_string("DriveEngagementGroup", regsub(curl.body(), {".*"user_engagement_group":"(.*?)".*"}, "\1"));
-  # TODO if DriveEngagementGroup == unknown || empty set it to default
+  if (curl.body() !~ {""user_engagement_group":""} || curl.body() ~ {""user_engagement_group":"unknown"}) {
+    var.set_string("DriveEngagementGroup", "default");
+  } else {
+    var.set_string("DriveEngagementGroup", regsub(curl.body(), {".*"user_engagement_group":"(.*?)".*"}, "\1"));
+  }
+
+  if (curl.body() ~ {""correlation_id":""}) {
+    var.set_string("DriveCorrelationId", regsub(curl.body(), {".*"correlation_id":"(.*?)".*"}, "\1"));
+  } else {
+    var.set_string("DriveCorrelationId", "");
+  }
   curl.free();
 }
 {{ end }}
