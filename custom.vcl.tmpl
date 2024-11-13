@@ -676,7 +676,7 @@ sub get_engagement_group_and_correlation_id {
   curl.header_add("Content-Type: application/json");
 
   # post to DRIVE_API_URL with body e.g.: {"portal":"wn.de","user_id":"<user_id>"}
-  curl.post("{{ getenv "DRIVE_API_URL" }}", "{" + {""portal":""} + req.http.Host + {"","user_id":""} + var.get_string("DriveUserId") + {"""} + "}");
+  curl.post("{{ getenv "DRIVE_API_URL" }}", "{" + {""portal":""} + regsub(req.http.Host, "www\.", "") + {"","user_id":""} + var.get_string("DriveUserId") + {"""} + "}");
 
   if (curl.status() != 200) {
     var.set_string("DriveEngagementGroup", "default");
