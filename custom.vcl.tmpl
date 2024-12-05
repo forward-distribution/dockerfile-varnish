@@ -670,8 +670,8 @@ sub get_engagement_group_and_correlation_id {
   if (req.http.Cookie ~ "sso-sessionId=") {
     var.set_string("DriveUserId", regsub(req.http.Cookie, "(^|;\s*)sso-sessionId=(.*?)(;.*|$)", "\2"));
   } else {
-    # example: spid.d8a1=6e785887-ce8e-4ac1-969a-785fb4a349cd.1721393063.5.1722338888.1721740542.c5e01ee3-4035-448d-9293-a4a0caa1364a => user_id = "d8a1=6e785887-ce8e-4ac1-969a-785fb4a349cd"
-    var.set_string("DriveUserId", regsub(req.http.Cookie, "(^|;\s*)spid\.(.*?)\..*", "\2"));
+    # example: spid.d8a1=6e785887-ce8e-4ac1-969a-785fb4a349cd.1721393063.5.1722338888.1721740542.c5e01ee3-4035-448d-9293-a4a0caa1364a => user_id = "6e785887-ce8e-4ac1-969a-785fb4a349cd"
+    var.set_string("DriveUserId", regsub(req.http.Cookie, "^(.*spid\..{4}=)(.*?)\..*", "\2"));
   }
 
   curl.set_timeout(1000);
