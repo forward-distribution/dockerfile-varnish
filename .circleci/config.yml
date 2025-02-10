@@ -7,12 +7,13 @@ jobs:
   docker-build-master:
     docker:
       - image: circleci/buildpack-deps:stretch
-        auth:
-          username: $DOCKERHUB_USERNAME
-          password: $DOCKERHUB_PASS
     steps:
       - checkout
       - setup_remote_docker
+      - run:
+          name: Docker login
+          command: |
+            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
       - run:
           name: Build Docker image
           command: |
@@ -23,7 +24,6 @@ jobs:
           name: Publish Docker Image to Docker Hub
           command: |
             TAG=$VERSION_MAJOR.$VERSION_MINOR.$CIRCLE_BUILD_NUM
-            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
             echo "Pushing image: $IMAGE_NAME:$TAG"
             docker push $IMAGE_NAME:$TAG
       - slack/notify:
