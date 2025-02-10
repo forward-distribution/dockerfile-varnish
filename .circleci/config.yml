@@ -7,14 +7,12 @@ jobs:
   docker-build-master:
     docker:
       - image: circleci/buildpack-deps:stretch
+        auth:
+          username: $DOCKERHUB_USERNAME
+          password: $DOCKERHUB_PASS
     steps:
       - checkout
       - setup_remote_docker
-      - docker/check:
-          docker-username: $DOCKERHUB_USERNAME
-          docker-password: $DOCKERHUB_PASS
-      - docker/pull:
-          images: 'forwardpublishing/ld-varnish-fp-security-update:6.5.2-r1'
       - run:
           name: Build Docker image
           command: |
