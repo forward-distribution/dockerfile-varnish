@@ -17,13 +17,13 @@ jobs:
       - run:
           name: Build Docker image
           command: |
-            TAG=$VERSION_MAJOR.$VERSION_MINOR.$CIRCLE_BUILD_NUM
+            TAG=6.5.2-r1-customvcl-v.$CIRCLE_BUILD_NUM
             echo "Building image with tag: $TAG"
             docker build -t $IMAGE_NAME:$TAG .
       - run:
           name: Publish Docker Image to Docker Hub
           command: |
-            TAG=$VERSION_MAJOR.$VERSION_MINOR.$CIRCLE_BUILD_NUM
+            TAG=6.5.2-r1-customvcl-v.$CIRCLE_BUILD_NUM
             echo "Pushing image: $IMAGE_NAME:$TAG"
             docker push $IMAGE_NAME:$TAG
       - slack/notify:
