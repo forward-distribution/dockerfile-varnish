@@ -6,7 +6,7 @@ orbs:
 jobs:
   docker-build-master:
     docker:
-      - image: 'forwardpublishing/ld-varnish-fp-security-update:6.5.2-r1'
+      - image: circleci/buildpack-deps:stretch
         auth:
           username: $DOCKERHUB_USERNAME
           password: $DOCKERHUB_PASS
