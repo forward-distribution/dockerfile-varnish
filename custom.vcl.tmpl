@@ -500,7 +500,6 @@ sub vcl_synth {
           set resp.http.Location = "https://" + req.http.Host + req.url + "&" + var.get_string("eMeterLocation");
         }
         {{ if (getenv "DRIVE_API_URL") }}
-        set resp.http.Location = resp.http.Location + "&ueg=" + var.get_string("DriveEngagementGroup");
         if (var.get_string("DriveCorrelationId") != "") {
           if (resp.http.Set-Cookie) {
             set resp.http.Set-Cookie = resp.http.Set-Cookie + "DriveCorrelationId=" + var.get_string("DriveCorrelationId") + "; path=/;";
@@ -636,12 +635,11 @@ sub paywall_subroutine {
           {{ if (getenv "DRIVE_API_URL") }}
           if (var.get_string("eMeterLocation") ~ "pid=true") {
             call get_engagement_group_and_correlation_id;
-            if (req.url !~ "(\?)pid=true" || regsub(req.url, "^.*(\?|&)ueg=(.*)(&|$)", "\2") != var.get_string("DriveEngagementGroup")) {
+            if (var.get_string("eMeterLocation") ~ "pid=true" && req.url !~ "(\?)pid=true") {
               set req.url = regsuball(req.url, "(\?)(.*)", "");
               var.set_string("eMeterLocation", regsub(var.get_string("eMeterLocation"), "lid=true", ""));
               return (synth(751, "eMeter redirection"));
             }
-            return; # here is ok, both pid=true and correct ueg are set
           }
           {{ else }}
           if (var.get_string("eMeterLocation") ~ "pid=true" && req.url !~ "(\?)pid=true") {
