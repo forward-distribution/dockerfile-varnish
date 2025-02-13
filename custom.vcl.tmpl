@@ -116,6 +116,18 @@ acl purge_acl {
   {{ end }}
 }
 
+{{ if (getenv "VARNISH_HOOK_WHITELIST_IPS") }}
+sub vg_wort_whitelist_ip_check {
+    {{ $VG_WORT_IPS_WHITELIST := (split (getenv "VARNISH_HOOK_WHITELIST_IPS") ",") }}
+
+    # Get the client IP from the request
+    if (client.ip ~ {{ $VG_WORT_IPS_WHITELIST }}) {
+        # Allow access to premium content
+        return (deliver);
+    }
+}
+{{ end }}
+
 sub vcl_init {
   var.global_set("health", "200");
 
@@ -446,6 +458,10 @@ sub vcl_deliver {
 
   {{ if (getenv "BOT_VERIFICATION") }}
     call bot_verification;
+  {{ end }}
+
+  {{ if (getenv "VARNISH_HOOK_WHITELIST_IPS") }}
+    call vg_wort_whitelist_ip_check
   {{ end }}
 
   {{ if (getenv "E_METER_URL") }}{{ if (getenv "E_METER_X_TOKEN") }}
