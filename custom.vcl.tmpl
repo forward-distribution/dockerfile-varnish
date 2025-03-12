@@ -339,6 +339,9 @@ sub vcl_miss {
 }
 
 sub vcl_backend_fetch {
+
+   <%- config.hooks?.vclBackendResponse || '' %>
+
   if (bereq.retries > 0) {
     if (bereq.http.host == "error") { set bereq.backend = {{ if $IS_ERROR_PAGE_REMOTE }}backend_error{{ else }}delivery.backend(){{ end }}; }
     else { set bereq.backend = delivery.backend(); }
@@ -352,7 +355,7 @@ sub vcl_backend_response {
   if (bereq.uncacheable) { return (deliver); }
   set beresp.http.url = bereq.url;
 
-  # Enable ESI for pages that request it
+  # Enable ESI for pages that request i`t
   if (beresp.http.Surrogate-Control ~ "ESI/1.0") {
     set beresp.do_esi = true;
   }
