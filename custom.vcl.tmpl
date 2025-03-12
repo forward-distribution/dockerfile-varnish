@@ -355,7 +355,7 @@ sub vcl_backend_response {
   if (bereq.uncacheable) { return (deliver); }
   set beresp.http.url = bereq.url;
 
-  # Enable ESI for pages that request i`t
+  # Enable ESI for pages that request it
   if (beresp.http.Surrogate-Control ~ "ESI/1.0") {
     set beresp.do_esi = true;
   }
