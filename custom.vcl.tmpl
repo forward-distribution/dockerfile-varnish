@@ -350,7 +350,7 @@ sub vcl_backend_fetch {
 # Called after the response headers has been successfully retrieved from the backend.
 sub vcl_backend_response {
 
-  <%- config.hooks?.vclBackendResponseStart || '' %>
+  {{ getenv "VARNISH_HOOK_VCL_BACKEND_RESP_START" "" }}
 
   if (bereq.uncacheable) { return (deliver); }
   set beresp.http.url = bereq.url;
