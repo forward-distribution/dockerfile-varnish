@@ -695,6 +695,8 @@ sub get_engagement_group_and_correlation_id {
     std.log("drive user id spid cookie: " + var.get_string("DriveUserId") + ", full cookie: " + req.http.Cookie);
   } else {
     std.log("drive user id: no user id found, full cookie: " + req.http.Cookie);
+    var.set_string("DriveEngagementGroup", "default");
+    var.set_string("DriveCorrelationId", "");
     curl.free();
     return;
   }
