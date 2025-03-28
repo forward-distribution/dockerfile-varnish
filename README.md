@@ -1,5 +1,8 @@
 # Varnish
 
+> [!IMPORTANT]  
+> Archived in favor of a private repository - https://github.com/forward-distribution/fp-dockerfile-varnish/tree/paywall-varnish
+
 The Varnish setup we at Netcetera currently use for the delivery when paywall from MPP is needed. Such paywall are used in the BLZ and ASC websites.
 
 ### Build
